@@ -4,8 +4,8 @@ import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Pais;
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Result;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -16,15 +16,17 @@ public class PaisDAOJPAImplementacion implements IPaisJPA{
     private EntityManager entityManager;
     
     @Override
-    public Result<Pais> GetAll() {
-        Result<Pais> result = new Result();
+    public Result GetAll() {
+        Result result = new Result();
         
         try {
-            TypedQuery<Pais> query =
-                    entityManager.createQuery("FROM Pais", Pais.class);
+            TypedQuery<Pais> queryPais = entityManager.createQuery(
+                    "FROM Pais", Pais.class);
             
-            List<Pais> paisJPA = query.getResultList();
-
+            List<Pais> paises = queryPais.getResultList();
+            
+            result.objects = new ArrayList<>(paises);
+            
             result.correct = true;
             
         } catch (Exception ex) {

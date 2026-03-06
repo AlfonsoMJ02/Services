@@ -7,8 +7,10 @@ import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Direccion;
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Result;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,15 +27,20 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
         try {
 
-            TypedQuery<Usuario> query
-                    = entityManager.createQuery("FROM Usuario", Usuario.class);
+            TypedQuery<Usuario> queryUsuario = entityManager.createQuery(
+                    "FROM Usuario u LEFT JOIN FETCH u.Direcciones",
+                    Usuario.class
+            );
 
-    
+            List<Usuario> usuarios = queryUsuario.getResultList();
+
+            result.objects = new ArrayList<>(usuarios);
+
             result.correct = true;
 
         } catch (Exception ex) {
             result.correct = false;
-            result.errorMessage = ex.getMessage();
+            result.errorMessage = ex.getLocalizedMessage();
             result.ex = ex;
         }
 
@@ -47,8 +54,6 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
         Result<Usuario> result = new Result<>();
 
         try {
-
-   
 
             result.correct = true;
 
@@ -176,7 +181,6 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
             if (direccionJPA != null) {
 
-                
                 result.correct = true;
 
             }
@@ -229,7 +233,7 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
             Usuario usuarioJPA = entityManager.find(Usuario.class, idUsuario);
 
             if (usuarioJPA != null) {
-             
+
                 result.correct = true;
             }
 
@@ -365,7 +369,6 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
             List<Usuario> usuariosJPA = query.getResultList();
 
-           
             result.correct = true;
 
         } catch (Exception ex) {
@@ -411,7 +414,6 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
 //                Integer idColonia = usuarioML.getdireccion().getColonia().getIdColonia();
 //                Colonia colonia = entityManager.find(Colonia.class, idColonia);
-
                 Direccion direccion = new Direccion();
 //                direccion.setCalle(usuarioML.getdireccion().getCalle());
 //                direccion.setNumeroInterior(usuarioML.getdireccion().getNumeroInterior());

@@ -1,7 +1,5 @@
 package com.digis01.AMorenoProgramacionNCapasMaven.JPA;
 
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -73,7 +71,6 @@ public class Usuario {
     private Rol Rol;
 
     @OneToMany(mappedBy = "Usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
     private List<Direccion> Direcciones;
     
     public int getEstatus() {

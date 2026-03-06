@@ -2,8 +2,6 @@ package com.digis01.AMorenoProgramacionNCapasMaven.RestController;
 
 
 import com.digis01.AMorenoProgramacionNCapasMaven.DAO.UsuarioDAOJPAImplementacion;
-import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Result;
-import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Usuario;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +14,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("Demo/Api")
+@RequestMapping()
 public class DemoRestController {
 
-    @GetMapping
-    public String HolaMundo() {
-        return "Hola Mundo";
-    }
+//    @GetMapping
+//    public String HolaMundo() {
+//        return "Hola Mundo";
+//    }
 
     @GetMapping("Saludo/{nombre}")
     public String Saludo(@PathVariable("nombre") String nombre) {
@@ -56,14 +54,8 @@ public class DemoRestController {
     @Autowired
     public UsuarioDAOJPAImplementacion dao;
 
-    @GetMapping("Usuario/{status}")
-    public ResponseEntity<List> ObtenerUsuarios(@PathVariable ("status") int status) {
-        Result result = dao.GetAll();
-
-        if (result.correct) {
-            return ResponseEntity.status(status).body(result.objects);
-        } else {
-            return ResponseEntity.status(status).body(null);
-        }
+    @GetMapping()
+    public ResponseEntity ObtenerUsuarios() {
+        return null;
     }
 }

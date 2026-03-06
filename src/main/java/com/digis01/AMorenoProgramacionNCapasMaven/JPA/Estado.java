@@ -1,5 +1,6 @@
 package com.digis01.AMorenoProgramacionNCapasMaven.JPA;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,6 +20,7 @@ public class Estado {
     
     @ManyToOne
     @JoinColumn( name = "idpais")
+    @JsonBackReference 
     private Pais Pais;
     
     public Estado(){

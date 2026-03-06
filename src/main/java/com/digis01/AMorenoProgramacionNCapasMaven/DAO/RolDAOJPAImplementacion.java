@@ -1,12 +1,11 @@
 package com.digis01.AMorenoProgramacionNCapasMaven.DAO;
 
-
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Result;
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Rol;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -17,18 +16,19 @@ public class RolDAOJPAImplementacion implements IRolJPA {
     private EntityManager entityManager;
 
     @Override
-    public Result<Rol> GetAll() {
+    public Result GetAll() {
 
-        Result<Rol> result = new Result<>();
+        Result result = new Result<>();
 
         try {
 
             TypedQuery<Rol> query =
                     entityManager.createQuery("FROM Rol", Rol.class);
 
-            List<Rol> rolesJPA = query.getResultList();
-
-
+            List<Rol> roles = query.getResultList();
+            
+            result.objects = new ArrayList<>(roles);
+            
             result.correct = true;
 
         } catch (Exception ex) {
