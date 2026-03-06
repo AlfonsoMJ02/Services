@@ -1,0 +1,46 @@
+package com.digis01.AMorenoProgramacionNCapasMaven.DAO;
+
+import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Estado;
+import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Result;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class EstadoDAOJPAImplementacion implements IEstadoJPA {
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Override
+    public Result<Estado> GetAll(int idPais) {
+
+        Result<Estado> result = new Result<>();
+
+        try {
+
+            TypedQuery<Estado> query =
+                    entityManager.createQuery(
+                            "FROM Estado e WHERE e.Pais.IdPais = :idPais",
+                            Estado.class
+                    );
+
+            query.setParameter("idPais", idPais);
+
+            List<Estado> estadoJPA =
+                    query.getResultList();
+
+            result.correct = true;
+
+        } catch (Exception ex) {
+            result.correct = false;
+            result.errorMessage = ex.getMessage();
+            result.ex = ex;
+        }
+
+        return result;
+    }
+}
