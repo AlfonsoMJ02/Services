@@ -1,6 +1,8 @@
 package com.digis01.AMorenoProgramacionNCapasMaven.RestController;
 
+import com.digis01.AMorenoProgramacionNCapasMaven.DAO.ColoniaDAOJPAImplementacion;
 import com.digis01.AMorenoProgramacionNCapasMaven.DAO.EstadoDAOJPAImplementacion;
+import com.digis01.AMorenoProgramacionNCapasMaven.DAO.MunicipioDAOJPAImplementacion;
 import com.digis01.AMorenoProgramacionNCapasMaven.DAO.PaisDAOJPAImplementacion;
 import com.digis01.AMorenoProgramacionNCapasMaven.DAO.RolDAOJPAImplementacion;
 import com.digis01.AMorenoProgramacionNCapasMaven.DAO.UsuarioDAOJPAImplementacion;
@@ -27,6 +29,10 @@ public class UsuarioRestController {
     
     @Autowired
     private EstadoDAOJPAImplementacion estadoJPADAO;
+    
+    @Autowired MunicipioDAOJPAImplementacion municipioJPADAO;
+    
+    @Autowired ColoniaDAOJPAImplementacion coloniaJPADAO;
 
     @GetMapping("/GetAll")
     public ResponseEntity<Result> GetAll() {
@@ -69,6 +75,28 @@ public class UsuarioRestController {
         if (result.correct) {
             return ResponseEntity.ok(result);
         } else {
+            return ResponseEntity.badRequest().body(result);
+        }
+    }
+    
+    @GetMapping("Municipio/GetByEstado/{idEstado}")
+    public ResponseEntity<Result> Municipio(@PathVariable int idEstado){
+        Result result = municipioJPADAO.GetAll(idEstado);
+        
+        if (result.correct) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.badRequest().body(result);
+        }
+    }
+    
+    @GetMapping("Colonia/GetByMunicipio/{idMunicipio}")
+    public ResponseEntity<Result> Colonia(@PathVariable int idMunicipio){
+        Result result = coloniaJPADAO.GetAll(idMunicipio);
+        
+        if (result.correct) {
+            return ResponseEntity.ok(result);
+        }else {
             return ResponseEntity.badRequest().body(result);
         }
     }

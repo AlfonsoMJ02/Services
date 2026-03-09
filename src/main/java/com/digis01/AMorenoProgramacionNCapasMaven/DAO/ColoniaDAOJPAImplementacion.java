@@ -4,8 +4,8 @@ import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Colonia;
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Result;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -27,7 +27,8 @@ public class ColoniaDAOJPAImplementacion implements IColoniaJPA{
             query.setParameter("idMunicipio", idMunicipio);
             
             List<Colonia> municipioJPA = query.getResultList();
-
+            
+            result.objects = new ArrayList<>(municipioJPA);
             result.correct = true;
         } catch (Exception ex) {
             result.correct = false;

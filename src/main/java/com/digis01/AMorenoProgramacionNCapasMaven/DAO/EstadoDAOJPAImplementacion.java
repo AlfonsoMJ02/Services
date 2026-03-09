@@ -17,9 +17,9 @@ public class EstadoDAOJPAImplementacion implements IEstadoJPA {
     private EntityManager entityManager;
 
     @Override
-    public Result<Estado> GetAll(int idPais) {
+    public Result GetAll(int idPais) {
 
-        Result<Estado> result = new Result<>();
+        Result result = new Result<>();
 
         try {
 
