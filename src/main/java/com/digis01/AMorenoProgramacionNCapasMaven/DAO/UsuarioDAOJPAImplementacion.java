@@ -54,14 +54,22 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
         try {
 
+            if (usuario.getDirecciones() != null) {
+                for (Direccion direccion : usuario.getDirecciones()) {
+                    direccion.setUsuario(usuario);
+                }
+            }
+
+            entityManager.persist(usuario);
+
             result.correct = true;
+            result.object = usuario;
 
         } catch (Exception ex) {
             result.correct = false;
             result.errorMessage = ex.getMessage();
             result.ex = ex;
         }
-
         return result;
     }
 
@@ -76,14 +84,11 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
             Direccion direccion = entityManager.find(Direccion.class, idDireccion);
 
             if (direccion != null) {
-
-                Usuario usuario = direccion.getUsuario();
-                usuario.getDirecciones().remove(direccion);
-
                 entityManager.remove(direccion);
-
                 result.correct = true;
-
+            } else {
+                result.correct = false;
+                result.errorMessage = "Usuario no encontrado";
             }
 
         } catch (Exception ex) {
@@ -98,20 +103,23 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
     @Override
     @Transactional
     public Result DeleteUser(int idUsuario) {
+
         Result result = new Result();
 
         try {
-            com.digis01.AMorenoProgramacionNCapasMaven.JPA.Usuario usuario
-                    = entityManager.find(com.digis01.AMorenoProgramacionNCapasMaven.JPA.Usuario.class, idUsuario);
+
+            Usuario usuario = entityManager.find(Usuario.class, idUsuario);
 
             if (usuario != null) {
-
                 entityManager.remove(usuario);
-
                 result.correct = true;
-
+            } else {
+                result.correct = false;
+                result.errorMessage = "Usuario no encontrado";
             }
+
         } catch (Exception ex) {
+
             result.correct = false;
             result.errorMessage = ex.getLocalizedMessage();
             result.ex = ex;
@@ -229,15 +237,19 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
         Result result = new Result();
 
         try {
-            Usuario usuarioJPA = entityManager.find(Usuario.class, idUsuario);
+            Usuario usuarioJPA
+                    = entityManager.find(Usuario.class, idUsuario);
 
             if (usuarioJPA != null) {
-
+                result.object = usuarioJPA;
                 result.correct = true;
+
             }
 
         } catch (Exception ex) {
-
+            result.correct = false;
+            result.errorMessage = ex.getLocalizedMessage();
+            result.ex = ex;
         }
 
         return result;
