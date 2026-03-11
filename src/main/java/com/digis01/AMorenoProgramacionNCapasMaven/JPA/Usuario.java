@@ -64,7 +64,7 @@ public class Usuario {
     private String Imagen;
 
     @Column(name = "estatus")
-    private int Estatus;
+    private int Estatus = 1;
 
     @ManyToOne
     @JoinColumn(name = "idrol")

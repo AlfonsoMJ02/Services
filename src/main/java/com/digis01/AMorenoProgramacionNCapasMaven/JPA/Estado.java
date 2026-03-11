@@ -20,7 +20,6 @@ public class Estado {
     
     @ManyToOne
     @JoinColumn( name = "idpais")
-    @JsonBackReference 
     private Pais Pais;
     
     public Estado(){

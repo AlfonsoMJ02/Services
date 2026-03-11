@@ -13,6 +13,7 @@ public class Pais {
     @Column(name = "idpais")
     private Integer IdPais;
     
+    @Column(name = "nombre")
     private String Nombre;
     
     public Pais(){

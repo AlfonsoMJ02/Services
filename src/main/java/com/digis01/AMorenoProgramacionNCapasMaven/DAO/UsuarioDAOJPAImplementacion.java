@@ -46,16 +46,26 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
         return result;
     }
 
-    @Override
     @Transactional
+    @Override
     public Result<Usuario> Add(Usuario usuario) {
 
         Result<Usuario> result = new Result<>();
 
         try {
 
+            Rol rol = entityManager.find(Rol.class, usuario.getRol().getIdRol());
+            usuario.setRol(rol);
+            System.out.println("Direcciones recibidas: " + usuario.getDirecciones());
             if (usuario.getDirecciones() != null) {
                 for (Direccion direccion : usuario.getDirecciones()) {
+
+                    Colonia colonia = entityManager.find(
+                            Colonia.class,
+                            direccion.getColonia().getIdColonia()
+                    );
+
+                    direccion.setColonia(colonia);
                     direccion.setUsuario(usuario);
                 }
             }
@@ -66,10 +76,14 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
             result.object = usuario;
 
         } catch (Exception ex) {
+
+            ex.printStackTrace();
+
             result.correct = false;
             result.errorMessage = ex.getMessage();
             result.ex = ex;
         }
+
         return result;
     }
 
@@ -130,39 +144,36 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
     @Override
     @Transactional
-    public Result AddDireccion(Direccion direccionML) {
+    public Result AddDireccion(Direccion direccion) {
 
         Result result = new Result();
 
         try {
+            
+            if(direccion.getUsuario() == null){
+            result.correct = false;
+            result.errorMessage = "Usuario no recibido";
+            return result;
+        }
 
-            com.digis01.AMorenoProgramacionNCapasMaven.JPA.Usuario usuario
-                    = entityManager.find(
-                            com.digis01.AMorenoProgramacionNCapasMaven.JPA.Usuario.class,
-                            direccionML.getUsuario().getIdUsuario()
-                    );
+            Usuario usuario = entityManager.find(Usuario.class, direccion.getUsuario().getIdUsuario());
 
-            com.digis01.AMorenoProgramacionNCapasMaven.JPA.Colonia colonia
-                    = entityManager.find(
-                            com.digis01.AMorenoProgramacionNCapasMaven.JPA.Colonia.class,
-                            direccionML.getColonia().getIdColonia()
-                    );
+            Colonia colonia = entityManager.find(Colonia.class, direccion.getColonia().getIdColonia());
 
             if (usuario != null && colonia != null) {
 
-                com.digis01.AMorenoProgramacionNCapasMaven.JPA.Direccion direccion
-                        = new com.digis01.AMorenoProgramacionNCapasMaven.JPA.Direccion();
+                Direccion direccionJPA = new Direccion();
 
-                direccion.setCalle(direccionML.getCalle());
-                direccion.setNumeroInterior(direccionML.getNumeroInterior());
-                direccion.setNumeroExterior(direccionML.getNumeroExterior());
+                direccionJPA.setCalle(direccion.getCalle());
+                direccionJPA.setNumeroInterior(direccion.getNumeroInterior());
+                direccionJPA.setNumeroExterior(direccion.getNumeroExterior());
 
-                direccion.setColonia(colonia);
-                direccion.setUsuario(usuario);
+                direccionJPA.setColonia(colonia);
+                direccionJPA.setUsuario(usuario);
 
-                usuario.getDirecciones().add(direccion);
+                usuario.getDirecciones().add(direccionJPA);
 
-                entityManager.persist(direccion);
+                entityManager.persist(direccionJPA);
 
                 result.correct = true;
 
@@ -187,7 +198,7 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
                     = entityManager.find(Direccion.class, idDireccion);
 
             if (direccionJPA != null) {
-
+                result.object = direccionJPA;
                 result.correct = true;
 
             }
@@ -301,7 +312,6 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
             if (usuarioJPA != null) {
                 usuarioJPA.setImagen(imagenBase64);
-                entityManager.merge(usuarioJPA);
                 result.correct = true;
             }
         } catch (Exception ex) {
@@ -323,7 +333,6 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
             if (usuarioJPA != null) {
                 usuarioJPA.setEstatus(estatus);
-                entityManager.merge(usuarioJPA);
                 result.correct = true;
             }
         } catch (Exception ex) {
@@ -379,7 +388,7 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
             }
 
             List<Usuario> usuariosJPA = query.getResultList();
-
+            result.objects = usuariosJPA;
             result.correct = true;
 
         } catch (Exception ex) {
