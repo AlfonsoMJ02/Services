@@ -1,5 +1,6 @@
 package com.digis01.AMorenoProgramacionNCapasMaven.JPA;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
@@ -34,7 +35,7 @@ public class Direccion {
 
     @ManyToOne
     @JoinColumn(name = "idusuario")
-    @JsonIgnore
+    @JsonBackReference
     private Usuario Usuario;
 
 

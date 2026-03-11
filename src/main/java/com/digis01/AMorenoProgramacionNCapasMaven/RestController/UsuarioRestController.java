@@ -246,11 +246,35 @@ public class UsuarioRestController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
         }
     }
-    
+
     @PostMapping("Add/Direccion")
-    public ResponseEntity<Result> AddDireccion(@RequestBody Direccion direccion){
+    public ResponseEntity<Result> AddDireccion(@RequestBody Direccion direccion) {
+    
         Result result = usuarioJPADAO.AddDireccion(direccion);
-        
+
+        if (result.correct) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.badRequest().body(result);
+        }
+    }
+
+    @PutMapping("Update/Direccion")
+    public ResponseEntity<Result> UpdateDireccion(@RequestBody Direccion direccion) {
+        Result result = usuarioJPADAO.UpdateDireccion(direccion);
+
+        if (result.correct) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.badRequest().body(result);
+        }
+    }
+
+    @GetMapping("Search")
+    public ResponseEntity<Result> Search(@RequestParam(required = false) String nombre, @RequestParam(required = false) String apellidoPaterno, @RequestParam(required = false) String apellidoMaterno, @RequestParam(required = false) Integer idRol) {
+
+        Result result = usuarioJPADAO.Search(nombre, apellidoPaterno, apellidoMaterno, idRol);
+
         if (result.correct) {
             return ResponseEntity.ok(result);
         } else {
