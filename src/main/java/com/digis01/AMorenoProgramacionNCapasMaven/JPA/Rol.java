@@ -3,10 +3,13 @@ package com.digis01.AMorenoProgramacionNCapasMaven.JPA;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotEmpty;
 
 @Entity
 public class Rol {
+    
     @Id
+    @NotEmpty(message = "Este campo no puede estar vacio")
     @Column(name = "idrol")
     private int IdRol;
     

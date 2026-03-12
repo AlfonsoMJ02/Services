@@ -462,39 +462,24 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
             int batchSize = 50;
             int i = 0;
 
-            for (Usuario usuarioML : usuarios) {
+            for (Usuario usuario : usuarios) {
 
-                Usuario usuarioJPA = new Usuario();
+                Rol rol = entityManager.find(Rol.class, usuario.getRol().getIdRol());
+                usuario.setRol(rol);
 
-                usuarioJPA.setNombre(usuarioML.getNombre());
-                usuarioJPA.setApellidoPaterno(usuarioML.getApellidoPaterno());
-                usuarioJPA.setApellidoMaterno(usuarioML.getApellidoMaterno());
-                usuarioJPA.setEmail(usuarioML.getEmail());
-                usuarioJPA.setPassword(usuarioML.getPassword());
-                usuarioJPA.setSexo(usuarioML.getSexo());
-                usuarioJPA.setTelefono(usuarioML.getTelefono());
-                usuarioJPA.setCelular(usuarioML.getCelular());
-                usuarioJPA.setCurp(usuarioML.getCurp());
-                usuarioJPA.setUserName(usuarioML.getUserName());
-                usuarioJPA.setFechaNacimiento(usuarioML.getFechaNacimiento());
+                for (Direccion direccion : usuario.getDirecciones()) {
 
-                Rol rol = entityManager.find(Rol.class, usuarioML.getRol().getIdRol());
-                usuarioJPA.setRol(rol);
+                    Integer idColonia = direccion.getColonia().getIdColonia();
+                    Colonia colonia = entityManager.find(Colonia.class, idColonia);
 
-//                Integer idColonia = usuarioML.getdireccion().getColonia().getIdColonia();
-//                Colonia colonia = entityManager.find(Colonia.class, idColonia);
-                Direccion direccion = new Direccion();
-//                direccion.setCalle(usuarioML.getdireccion().getCalle());
-//                direccion.setNumeroInterior(usuarioML.getdireccion().getNumeroInterior());
-//                direccion.setNumeroExterior(usuarioML.getdireccion().getNumeroExterior());
-//                direccion.setColonia(colonia);
-                direccion.setUsuario(usuarioJPA);
+                    direccion.setColonia(colonia);
+                    direccion.setUsuario(usuario);
+                }
 
-                usuarioJPA.getDirecciones().add(direccion);
-
-                entityManager.persist(usuarioJPA);
+                entityManager.persist(usuario);
 
                 if (i > 0 && i % batchSize == 0) {
+
                     entityManager.flush();
                     entityManager.clear();
                 }
@@ -509,10 +494,8 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
             result.correct = false;
             result.errorMessage = ex.getMessage();
             result.ex = ex;
-
         }
 
         return result;
     }
-
 }

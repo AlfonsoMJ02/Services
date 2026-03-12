@@ -10,6 +10,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -19,16 +21,19 @@ public class Direccion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "iddireccion")
     private int IdDireccion;
-
+    
+    @NotEmpty(message = "Este campo no  puede estar vacio")
     @Column(name = "calle")
     private String Calle;
 
     @Column(name = "numerointerior")
     private String NumeroInterior;
-
+    
+    @NotEmpty(message = "Este campo no  puede estar vacio")
     @Column(name = "numeroexterior")
     private String NumeroExterior;
 
+    @Valid
     @ManyToOne
     @JoinColumn(name = "idcolonia")
     private Colonia Colonia;

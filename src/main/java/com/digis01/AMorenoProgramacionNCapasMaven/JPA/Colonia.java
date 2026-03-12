@@ -8,11 +8,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotEmpty;
 
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Colonia {
+    
     @Id
+    @NotEmpty(message = "No puede estar vacio este campo")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idcolonia")
     private int IdColonia;
