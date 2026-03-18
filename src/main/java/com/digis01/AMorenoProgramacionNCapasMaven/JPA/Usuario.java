@@ -63,9 +63,9 @@ public class Usuario {
     @Column(name = "password")
     private String Password;
     
-    @Pattern(regexp = "^[A-Za-z]+$", message = "Solo puedes escribir una letra en este campo")
+    @Pattern(regexp = "^[A-Za-z]+$", message = "Solo puedes escribir H o M")
     @NotEmpty(message = "Este campo no puede estar vacio, selecciona una opción")
-    @Size(min = 1, max = 2, message = "Debe tener más de 2 Digitos minimo y maximo 20")
+    @Size(min = 1, max = 2, message = "Debe tener maximo 2 letras")
     @Column(name = "sexo")
     private String Sexo;
     

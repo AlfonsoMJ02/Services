@@ -6,6 +6,7 @@ import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Colonia;
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Direccion;
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Result;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.List;
@@ -162,8 +163,6 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
             );
 
             if (direccion.getUsuario() != null && direccion.getColonia() != null) {
-
-                direccion.getUsuario().getDirecciones().add(direccion);
 
                 entityManager.persist(direccion);
 
@@ -337,19 +336,12 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
         try {
 
-            Usuario usuarioJPA = entityManager.find(Usuario.class, idUsuario);
+            Query query = entityManager.createQuery("UPDATE Usuario SET  Imagen = :imagen WHERE IdUsuario = :idUsuario");
 
-            if (usuarioJPA != null) {
-
-                usuarioJPA.setImagen(imagenBase64);
-
-                result.correct = true;
-
-            } else {
-
-                result.correct = false;
-                result.errorMessage = "Usuario no encontrado";
-            }
+            query.setParameter("imagen", imagenBase64);
+            query.setParameter("idUsuario", idUsuario);
+            int filas = query.executeUpdate();
+            result.correct = filas > 0;
 
         } catch (Exception ex) {
 
@@ -361,27 +353,24 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
         return result;
     }
 
-    @Override
     @Transactional
+    @Override
     public Result Estatus(int idUsuario, int estatus) {
 
         Result result = new Result();
 
         try {
 
-            Usuario usuarioJPA = entityManager.find(Usuario.class, idUsuario);
+            Query query = entityManager.createQuery(
+                    "UPDATE Usuario SET Estatus = :estatus WHERE IdUsuario = :idUsuario"
+            );
 
-            if (usuarioJPA != null) {
+            query.setParameter("estatus", estatus);
+            query.setParameter("idUsuario", idUsuario);
 
-                usuarioJPA.setEstatus(estatus);
+            int filas = query.executeUpdate();
 
-                result.correct = true;
-
-            } else {
-
-                result.correct = false;
-                result.errorMessage = "Usuario no encontrado";
-            }
+            result.correct = filas > 0;
 
         } catch (Exception ex) {
 
@@ -400,22 +389,22 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
         try {
 
-            String jpql = "SELECT DISTINCT Usuario FROM Usuario LEFT JOIN FETCH Direcciones WHERE 1=1";
+            String jpql = "SELECT DISTINCT u FROM Usuario u LEFT JOIN FETCH u.Direcciones d WHERE 1=1";
 
             if (nombre != null && !nombre.isEmpty()) {
-                jpql += " AND LOWER(Nombre) LIKE LOWER(:nombre)";
+                jpql += " AND LOWER(u.Nombre) LIKE LOWER(:nombre)";
             }
 
             if (apellidoPaterno != null && !apellidoPaterno.isEmpty()) {
-                jpql += " AND LOWER(ApellidoPaterno) LIKE LOWER(:apellidoPaterno)";
+                jpql += " AND LOWER(u.ApellidoPaterno) LIKE LOWER(:apellidoPaterno)";
             }
 
             if (apellidoMaterno != null && !apellidoMaterno.isEmpty()) {
-                jpql += " AND LOWER(ApellidoMaterno) LIKE LOWER(:apellidoMaterno)";
+                jpql += " AND LOWER(u.ApellidoMaterno) LIKE LOWER(:apellidoMaterno)";
             }
 
             if (idRol != null) {
-                jpql += " AND Rol.IdRol = :idRol";
+                jpql += " AND u.Rol.IdRol = :idRol";
             }
 
             TypedQuery<Usuario> query = entityManager.createQuery(jpql, Usuario.class);
@@ -493,6 +482,39 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
             result.correct = false;
             result.errorMessage = ex.getMessage();
+            result.ex = ex;
+        }
+
+        return result;
+    }
+
+    @Override
+    public Result GetByUserNameOrCorreo(String username) {
+
+        Result result = new Result();
+
+        try {
+
+            TypedQuery<Usuario> query = entityManager.createQuery(
+                    "FROM Usuario u WHERE u.UserName = :username OR u.Correo = :username",
+                    Usuario.class
+            );
+
+            query.setParameter("username", username);
+
+            List<Usuario> usuarios = query.getResultList();
+
+            if (!usuarios.isEmpty()) {
+                result.object = usuarios.get(0);
+                result.correct = true;
+            } else {
+                result.correct = false;
+                result.errorMessage = "Usuario no encontrado";
+            }
+
+        } catch (Exception ex) {
+            result.correct = false;
+            result.errorMessage = ex.getLocalizedMessage();
             result.ex = ex;
         }
 

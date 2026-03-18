@@ -15,7 +15,13 @@ import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Usuario;
 import com.digis01.AMorenoProgramacionNCapasMaven.Services.ValidationService;
 import com.digis01.AMorenoProgramacionNCapasMaven.Utils.LogCargaMasiva;
 import com.digis01.AMorenoProgramacionNCapasMaven.Utils.SHA256Generator;
-import jakarta.servlet.http.HttpSession;
+import com.digis01.AMorenoProgramacionNCapasMaven.Utils.SwaggerExamples;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,7 +36,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -41,7 +46,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -56,10 +60,35 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @RestController
 @RequestMapping("/Api/Usuario")
+
+@ApiResponses(value = {
+    @ApiResponse(
+            responseCode = "400",
+            description = "Solicitud incorrecta",
+            content = @Content(
+                    examples = @ExampleObject(value = SwaggerExamples.BAD_REQUEST)
+            )
+    ),
+
+    @ApiResponse(
+            responseCode = "404",
+            description = "Recurso no encontrado",
+            content = @Content(
+                    examples = @ExampleObject(value = SwaggerExamples.NOT_FOUND)
+            )
+    ),
+
+    @ApiResponse(
+            responseCode = "500",
+            description = "Error interno del servidor",
+            content = @Content(
+                    examples = @ExampleObject(value = SwaggerExamples.INTERNAL_ERROR)
+            )
+    )
+})
 public class UsuarioRestController {
 
     @Autowired
@@ -79,7 +108,16 @@ public class UsuarioRestController {
 
     @Autowired
     ColoniaDAOJPAImplementacion coloniaJPADAO;
-
+    
+    @Operation(summary = "Mostrar usuarios", description = "Permite mostrar todos los usuarios del sisetma")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Usuarios mostrados correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @GetMapping("/GetAll")
     public ResponseEntity<Result> GetAll() {
 
@@ -91,7 +129,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
+    
+    @Operation(summary = "Mostrar roles", description = "Permite mostrar todos los roles")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Roles mostrados correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @GetMapping("Rol")
     public ResponseEntity<Result> Rol() {
         Result result = rolJPADAO.GetAll();
@@ -102,7 +149,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
+    
+    @Operation(summary = "Mostrar paises", description = "Permite mostrar todos los paises")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Paises mostrados correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @GetMapping("Pais")
     public ResponseEntity<Result> Pais() {
         Result result = paisJPADAO.GetAll();
@@ -113,7 +169,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
+    
+    @Operation(summary = "Mostrar estados", description = "Permite mostrar todos los estados pertenecientes a el pais seleccionado")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Estados mostrados correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @GetMapping("Estado/GetByPais/{idPais}")
     public ResponseEntity<Result> Estado(@PathVariable int idPais) {
         Result result = estadoJPADAO.GetAll(idPais);
@@ -124,7 +189,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
+    
+    @Operation(summary = "Mostrar municipios", description = "Permite mostrar todos los municipios pertenecientes a el estado seleccionado")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Municipios mostrados correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @GetMapping("Municipio/GetByEstado/{idEstado}")
     public ResponseEntity<Result> Municipio(@PathVariable int idEstado) {
         Result result = municipioJPADAO.GetAll(idEstado);
@@ -135,7 +209,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
+    
+    @Operation(summary = "Mostrar colonias", description = "Permite mostrar todas las colonias pertenecientes al municipio seleccionado")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Colonias mostradas correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @GetMapping("Colonia/GetByMunicipio/{idMunicipio}")
     public ResponseEntity<Result> Colonia(@PathVariable int idMunicipio) {
         Result result = coloniaJPADAO.GetAll(idMunicipio);
@@ -146,7 +229,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
+    
+    @Operation(summary = "Eliminar usuario", description = "Permite eliminar toda la informacion relacionada con ese usuario")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Usuario eliminado correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @DeleteMapping("Delete/{idUsuario}")
     @ResponseBody
     public ResponseEntity<Result> DeleteUsuario(@PathVariable int idUsuario) {
@@ -158,7 +250,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
+    
+    @Operation(summary = "Eliminar direccion", description = "Permite eliminar la direccion de un usuario ya creado")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Usuario actualizado correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @DeleteMapping("Delete/Direccion/{idDireccion}")
     @ResponseBody
     public ResponseEntity<Result> DeleteDireccion(@PathVariable int idDireccion) {
@@ -171,6 +272,15 @@ public class UsuarioRestController {
         }
     }
 
+    @Operation(summary = "Mostrar solo un usuario", description = "Permite mostrar la informacion personal de un usuario ya creado")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Informacion mostrada correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @GetMapping("GetById/{idUsuario}")
     public ResponseEntity<Result> GetById(@PathVariable int idUsuario) {
         Result result = usuarioJPADAO.GetById(idUsuario);
@@ -181,7 +291,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
+    
+    @Operation(summary = "Mostrar usuarios", description = "Permite mostrar toda la informacion de todos los usuarios del sistema")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Usuarios mostrados correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @GetMapping("GetById/Direccion/{idDireccion}")
     public ResponseEntity<Result> GetByIdDireccion(@PathVariable int idDireccion) {
         Result result = usuarioJPADAO.GetByIdDireccion(idDireccion);
@@ -192,7 +311,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
+    
+    @Operation(summary = "Actualizar estatus", description = "Permite actualizar el estatus de un usuario ya creado")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Estatus de usuario actualizado correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @PutMapping("Update/Estatus")
     public ResponseEntity<Result> Estatus(@RequestParam("idUsuario") int idUsuario, @RequestParam("estatus") int estatus) {
         Result result = usuarioJPADAO.Estatus(idUsuario, estatus);
@@ -203,7 +331,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
+    
+    @Operation(summary = "Agregar usuario", description = "Permite agregar a un nuevo usuario")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Usuario agregado correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @PostMapping(value = "Add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Result<Usuario>> Add(@RequestPart("usuario") Usuario usuario, @RequestPart(name = "imagen", required = false) MultipartFile imagen) {
 
@@ -235,7 +372,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
+    
+    @Operation(summary = "Actualizar imagen", description = "Permite actualizar la imagen de un usuario ya creado")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Imagen actualizada correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @PutMapping("/Update/Imagen")
     @ResponseBody
     public Result UpdateImagen(@RequestParam("idUsuario") int idUsuario, @RequestParam("imagenFile") MultipartFile imagenFile) {
@@ -265,6 +411,15 @@ public class UsuarioRestController {
         return result;
     }
 
+    @Operation(summary = "Actualizar usuario", description = "Permite actualizar la infromacion personal de un usuario ya creado")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Usuario actualizado correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @PutMapping("Update")
     public ResponseEntity Update(@RequestBody Usuario usuario) {
 
@@ -277,6 +432,15 @@ public class UsuarioRestController {
         }
     }
 
+    @Operation(summary = "Agregar nueva direccion", description = "Permite agregar una nueva direccion al usuario ya creada")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Direccion agregada correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @PostMapping("Add/Direccion")
     public ResponseEntity<Result> AddDireccion(@RequestBody Direccion direccion) {
 
@@ -289,6 +453,15 @@ public class UsuarioRestController {
         }
     }
 
+    @Operation(summary = "Actualizar direccion", description = "Permite actualizar una direccion del usuario ya creada")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Direccion actualizada correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
     @PutMapping("Update/Direccion")
     public ResponseEntity<Result> UpdateDireccion(@RequestBody Direccion direccion) {
         Result result = usuarioJPADAO.UpdateDireccion(direccion);
@@ -299,6 +472,16 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
+
+    @Operation(summary = "Buscar usuarios", description = "Permite buscar usuarios por nombre, apellido paterno, apellido materno o rol")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Usuarios encontrados correctamente",
+            content = @Content(
+                    schema = @Schema(implementation = Result.class),
+                    examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
+            )
+    )
 
     @GetMapping("Search")
     public ResponseEntity<Result> Search(@RequestParam(required = false) String nombre, @RequestParam(required = false) String apellidoPaterno, @RequestParam(required = false) String apellidoMaterno, @RequestParam(required = false) Integer idRol) {
@@ -325,9 +508,7 @@ public class UsuarioRestController {
             String nombreArchivo = fecha + archivo.getOriginalFilename();
             String rutaArchivo = rutaBase + "/" + rutaCarpeta + "/" + nombreArchivo;
             String extension = archivo.getOriginalFilename().split("\\.")[1];
-
             archivo.transferTo(new File(rutaArchivo));
-
             List<Usuario> usuarios = null;
 
             if (extension.equals("txt")) {
@@ -339,16 +520,12 @@ public class UsuarioRestController {
             List<ErroresArchivo> errores = ValidarDatos(usuarios);
 
             if (errores.isEmpty()) {
-
                 String key = SHA256Generator.generateKey(rutaArchivo + LocalDateTime.now());
-
                 LogCargaMasiva.escribir(key, rutaArchivo, "VALIDO", "Archivo validado sin errores");
-
                 result.correct = true;
                 result.object = key;
 
             } else {
-
                 LogCargaMasiva.escribir("-", rutaArchivo, "INVALIDO", "Archivo con errores");
 
                 result.correct = false;
@@ -356,7 +533,6 @@ public class UsuarioRestController {
             }
 
         } catch (Exception ex) {
-
             result.correct = false;
             result.errorMessage = ex.getMessage();
         }
@@ -372,13 +548,10 @@ public class UsuarioRestController {
         try {
 
             String rutaLog = "src/main/resources/log/Log_CargaMasiva.txt";
-
             List<String> lineas = Files.readAllLines(Paths.get(rutaLog));
-
             String lineaEncontrada = null;
 
             for (String linea : lineas) {
-
                 if (linea.startsWith(key)) {
                     lineaEncontrada = linea;
                     break;
@@ -386,7 +559,6 @@ public class UsuarioRestController {
             }
 
             if (lineaEncontrada == null) {
-
                 result.correct = false;
                 result.errorMessage = "Registro no encontrado";
 
@@ -394,12 +566,9 @@ public class UsuarioRestController {
             }
 
             String[] datos = lineaEncontrada.split("\\|");
-
             String rutaArchivo = datos[1];
-
-            LocalDateTime fechaLog = LocalDateTime.parse(datos[3]);
-
-            long minutos = ChronoUnit.MINUTES.between(fechaLog, LocalDateTime.now());
+            LocalDateTime fecharArchivoLog = LocalDateTime.parse(datos[3]);
+            long minutos = ChronoUnit.MINUTES.between(fecharArchivoLog, LocalDateTime.now());
 
             if (minutos > 2) {
 
@@ -418,11 +587,10 @@ public class UsuarioRestController {
             } else {
                 usuarios = LecturaArchivoXLSX(new File(rutaArchivo));
             }
-            
+
             result = usuarioJPADAO.AddAll(usuarios);
 
         } catch (Exception ex) {
-
             result.correct = false;
             result.errorMessage = ex.getMessage();
         }
@@ -444,11 +612,11 @@ public class UsuarioRestController {
                 usuario.setRol(new Rol());
                 Direccion direccion = new Direccion();
                 Colonia colonia = new Colonia();
-                
+
                 direccion.setColonia(colonia);
                 usuario.setDirecciones(new ArrayList<>());
                 usuario.getDirecciones().add(direccion);
-                
+
                 usuario.setNombre(datosUsuario[0]);
                 usuario.setApellidoPaterno(datosUsuario[1]);
                 usuario.setApellidoMaterno(datosUsuario[2]);
@@ -496,7 +664,7 @@ public class UsuarioRestController {
                 usuario.setRol(new Rol());
                 Direccion direccion = new Direccion();
                 Colonia colonia = new Colonia();
-                
+
                 direccion.setColonia(colonia);
                 usuario.setDirecciones(new ArrayList<>());
                 usuario.getDirecciones().add(direccion);
