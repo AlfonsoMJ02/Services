@@ -20,5 +20,5 @@ public interface IUsuarioJPA {
     Result Estatus(int idUsuario, int estatus);
     Result Search(String nombre, String apellidoPaterno, String apellidoMaterno, Integer idRol);
     Result AddAll(List<Usuario> usuarios);
-    Result GetByUserNameOrCorreo(String userName);
+    Result GetByEmail(String email);
 }

@@ -487,30 +487,25 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
         return result;
     }
-
+    
     @Override
-    public Result GetByUserNameOrCorreo(String username) {
+    public Result GetByEmail(String email) {
 
         Result result = new Result();
 
         try {
 
             TypedQuery<Usuario> query = entityManager.createQuery(
-                    "FROM Usuario u WHERE u.UserName = :username OR u.Correo = :username",
+                    "FROM Usuario WHERE Email = :pEmail",
                     Usuario.class
             );
 
-            query.setParameter("username", username);
+            query.setParameter("email", email);
+            
+            Usuario usuario = query.getSingleResult();
 
-            List<Usuario> usuarios = query.getResultList();
-
-            if (!usuarios.isEmpty()) {
-                result.object = usuarios.get(0);
-                result.correct = true;
-            } else {
-                result.correct = false;
-                result.errorMessage = "Usuario no encontrado";
-            }
+            result.object = usuario;
+            result.correct = true;
 
         } catch (Exception ex) {
             result.correct = false;
