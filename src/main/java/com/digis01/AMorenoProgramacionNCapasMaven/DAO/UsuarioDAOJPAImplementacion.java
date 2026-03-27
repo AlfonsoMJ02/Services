@@ -94,16 +94,16 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
             Direccion direccion = entityManager.find(Direccion.class, idDireccion);
 
-            if (direccion != null) {
-
-                entityManager.remove(direccion);
-                result.correct = true;
-
-            } else {
-
+            if (direccion == null) {
                 result.correct = false;
-                result.errorMessage = "Direccion no encontrada";
+                result.errorMessage = "La direccion con id " + idDireccion + " no existe o ya fue eliminada";
+                return result;
             }
+
+            entityManager.remove(direccion);
+
+            result.correct = true;
+            result.object = "Direccion eliminada correctamente";
 
         } catch (Exception ex) {
 
@@ -192,7 +192,10 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
         try {
 
             TypedQuery<Direccion> queryDireccion = entityManager.createQuery(
-                    "FROM Direccion LEFT JOIN FETCH Usuario LEFT JOIN FETCH Colonia WHERE IdDireccion = :idDireccion",
+                    "SELECT d FROM Direccion d "
+                    + "LEFT JOIN FETCH d.usuario "
+                    + "LEFT JOIN FETCH d.colonia "
+                    + "WHERE d.idDireccion = :idDireccion",
                     Direccion.class
             );
 
@@ -206,7 +209,7 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
         } catch (Exception ex) {
 
             result.correct = false;
-            result.errorMessage = ex.getLocalizedMessage();
+            ex.printStackTrace();
             result.ex = ex;
         }
 
@@ -287,7 +290,7 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
         Result result = new Result();
 
         try {
-
+            System.out.println("ID recibido JSON: " + usuario.getIdUsuario());
             Usuario usuarioJPA = entityManager.find(Usuario.class, usuario.getIdUsuario());
 
             if (usuarioJPA != null) {
@@ -298,15 +301,19 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
                 usuarioJPA.setEmail(usuario.getEmail());
                 usuarioJPA.setFechaNacimiento(usuario.getFechaNacimiento());
                 usuarioJPA.setSexo(usuario.getSexo());
-                usuarioJPA.setPassword(usuario.getPassword());
+                if (usuario.getPassword() != null) {
+                    usuarioJPA.setPassword(usuario.getPassword());
+                }
                 usuarioJPA.setTelefono(usuario.getTelefono());
                 usuarioJPA.setCelular(usuario.getCelular());
                 usuarioJPA.setCurp(usuario.getCurp());
                 usuarioJPA.setUserName(usuario.getUserName());
 
-                usuarioJPA.setRol(
-                        entityManager.find(Rol.class, usuario.getRol().getIdRol())
-                );
+                if (usuario.getRol() != null) {
+                    usuarioJPA.setRol(
+                            entityManager.find(Rol.class, usuario.getRol().getIdRol())
+                    );
+                }
 
                 entityManager.merge(usuarioJPA);
 
@@ -487,7 +494,7 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
         return result;
     }
-    
+
     @Override
     public Result GetByEmail(String email) {
 
@@ -500,8 +507,8 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
                     Usuario.class
             );
 
-            query.setParameter("email", email);
-            
+            query.setParameter("pEmail", email);
+
             Usuario usuario = query.getSingleResult();
 
             result.object = usuario;

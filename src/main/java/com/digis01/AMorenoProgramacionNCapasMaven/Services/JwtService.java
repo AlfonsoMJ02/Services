@@ -1,5 +1,6 @@
 package com.digis01.AMorenoProgramacionNCapasMaven.Services;
 
+import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Usuario;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "12345678901234567890123456789012";  
+    private static final String SECRET_KEY = "M2Y0ZTVnNmg4ajlrMG0xbnJwOXFyc3R1dnd4eXphYmNkZWZnaGk=";  
     private static final long EXPIRATION_TIME = 3600000; 
     
     private SecretKey getSigningKey() {
@@ -23,9 +24,10 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(UserDetails user) {
+    public String generateToken(Usuario usuario, UserDetails user) {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("role", user.getAuthorities()); 
+        extraClaims.put("idUsuario", usuario.getIdUsuario());
 
         return Jwts.builder()
                 .claims(extraClaims)
@@ -57,5 +59,8 @@ public class JwtService {
     private boolean isTokenExpired(String token) {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
-
+    
+    public Integer extractIdUsuario(String token) {
+    return extractClaim(token, claims -> claims.get("idUsuario", Integer.class));
+}
 }

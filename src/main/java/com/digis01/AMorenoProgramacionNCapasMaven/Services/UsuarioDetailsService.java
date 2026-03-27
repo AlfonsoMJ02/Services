@@ -3,6 +3,7 @@ package com.digis01.AMorenoProgramacionNCapasMaven.Services;
 import com.digis01.AMorenoProgramacionNCapasMaven.DAO.UsuarioDAOJPAImplementacion;
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Result;
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Usuario;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,12 +12,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UsuarioDetailsService implements UserDetailsService {
-
-    private final UsuarioDAOJPAImplementacion usuarioDAO;
-
-    public UsuarioDetailsService(UsuarioDAOJPAImplementacion usuarioDAO) {
-        this.usuarioDAO = usuarioDAO;
-    }
+    
+    @Autowired
+    private UsuarioDAOJPAImplementacion usuarioDAO;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

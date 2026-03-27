@@ -12,6 +12,7 @@ import com.digis01.AMorenoProgramacionNCapasMaven.JPA.ErroresArchivo;
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Result;
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Rol;
 import com.digis01.AMorenoProgramacionNCapasMaven.JPA.Usuario;
+import com.digis01.AMorenoProgramacionNCapasMaven.Services.JwtService;
 import com.digis01.AMorenoProgramacionNCapasMaven.Services.ValidationService;
 import com.digis01.AMorenoProgramacionNCapasMaven.Utils.LogCargaMasiva;
 import com.digis01.AMorenoProgramacionNCapasMaven.Utils.SHA256Generator;
@@ -22,6 +23,8 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.persistence.EntityManager;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,6 +49,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -108,7 +114,7 @@ public class UsuarioRestController {
 
     @Autowired
     ColoniaDAOJPAImplementacion coloniaJPADAO;
-    
+
     @Operation(summary = "Mostrar usuarios", description = "Permite mostrar todos los usuarios del sisetma")
     @ApiResponse(
             responseCode = "200",
@@ -129,7 +135,7 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+
     @Operation(summary = "Mostrar roles", description = "Permite mostrar todos los roles")
     @ApiResponse(
             responseCode = "200",
@@ -149,7 +155,7 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+
     @Operation(summary = "Mostrar paises", description = "Permite mostrar todos los paises")
     @ApiResponse(
             responseCode = "200",
@@ -169,7 +175,7 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+
     @Operation(summary = "Mostrar estados", description = "Permite mostrar todos los estados pertenecientes a el pais seleccionado")
     @ApiResponse(
             responseCode = "200",
@@ -189,7 +195,7 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+
     @Operation(summary = "Mostrar municipios", description = "Permite mostrar todos los municipios pertenecientes a el estado seleccionado")
     @ApiResponse(
             responseCode = "200",
@@ -209,7 +215,7 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+
     @Operation(summary = "Mostrar colonias", description = "Permite mostrar todas las colonias pertenecientes al municipio seleccionado")
     @ApiResponse(
             responseCode = "200",
@@ -229,7 +235,7 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+
     @Operation(summary = "Eliminar usuario", description = "Permite eliminar toda la informacion relacionada con ese usuario")
     @ApiResponse(
             responseCode = "200",
@@ -239,6 +245,7 @@ public class UsuarioRestController {
                     examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
             )
     )
+    @PreAuthorize("hasRole('Administrador')")
     @DeleteMapping("Delete/{idUsuario}")
     @ResponseBody
     public ResponseEntity<Result> DeleteUsuario(@PathVariable int idUsuario) {
@@ -250,7 +257,22 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+    @Autowired
+    private EntityManager entityManager;
+
+    @GetMapping("testDireccion/{id}")
+    public Object test(@PathVariable int id) {
+        return entityManager.createQuery(
+                "SELECT d FROM Direccion d WHERE d.idDireccion = :id"
+        ).setParameter("id", id)
+                .getResultList();
+    }
+
+    @GetMapping("testAllDirecciones")
+    public Object testAll() {
+        return entityManager.createQuery("SELECT d FROM Direccion d").getResultList();
+    }
+
     @Operation(summary = "Eliminar direccion", description = "Permite eliminar la direccion de un usuario ya creado")
     @ApiResponse(
             responseCode = "200",
@@ -261,15 +283,44 @@ public class UsuarioRestController {
             )
     )
     @DeleteMapping("Delete/Direccion/{idDireccion}")
-    @ResponseBody
     public ResponseEntity<Result> DeleteDireccion(@PathVariable int idDireccion) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+
+        Result resultUsuario = usuarioJPADAO.GetByEmail(email);
+
+        if (!resultUsuario.correct) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultUsuario);
+        }
+
+        Usuario usuarioLogueado = (Usuario) resultUsuario.object;
+
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_Administrador"));
+
+        Result resultDireccion = usuarioJPADAO.Delete(idDireccion);
+
+        if (!resultDireccion.correct) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultDireccion);
+        }
+
+        Direccion direccion = (Direccion) resultDireccion.object;
+
+        if (!esAdmin && direccion.getUsuario().getIdUsuario() != usuarioLogueado.getIdUsuario()) {
+
+            Result error = new Result();
+            error.correct = false;
+            error.errorMessage = "No puedes eliminar direcciones de otro usuario";
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        }
+
         Result result = usuarioJPADAO.Delete(idDireccion);
 
-        if (result.correct) {
-            return ResponseEntity.ok(result);
-        } else {
-            return ResponseEntity.badRequest().body(result);
-        }
+        return result.correct
+                ? ResponseEntity.ok(result)
+                : ResponseEntity.badRequest().body(result);
     }
 
     @Operation(summary = "Mostrar solo un usuario", description = "Permite mostrar la informacion personal de un usuario ya creado")
@@ -283,6 +334,29 @@ public class UsuarioRestController {
     )
     @GetMapping("GetById/{idUsuario}")
     public ResponseEntity<Result> GetById(@PathVariable int idUsuario) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+
+        Result resultUsuario = usuarioJPADAO.GetByEmail(email);
+
+        if (!resultUsuario.correct) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(resultUsuario);
+        }
+
+        Usuario usuarioLogueado = (Usuario) resultUsuario.object;
+
+        boolean esAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_Administrador"));
+
+        if (!esAdmin && usuarioLogueado.getIdUsuario() != idUsuario) {
+            Result resultError = new Result();
+            resultError.correct = false;
+            resultError.errorMessage = "No puede ver informacion de otro usuario";
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(resultError);
+        }
+
         Result result = usuarioJPADAO.GetById(idUsuario);
 
         if (result.correct) {
@@ -291,7 +365,7 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+
     @Operation(summary = "Mostrar usuarios", description = "Permite mostrar toda la informacion de todos los usuarios del sistema")
     @ApiResponse(
             responseCode = "200",
@@ -311,7 +385,7 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+
     @Operation(summary = "Actualizar estatus", description = "Permite actualizar el estatus de un usuario ya creado")
     @ApiResponse(
             responseCode = "200",
@@ -331,7 +405,7 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+
     @Operation(summary = "Agregar usuario", description = "Permite agregar a un nuevo usuario")
     @ApiResponse(
             responseCode = "200",
@@ -372,7 +446,7 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+
     @Operation(summary = "Actualizar imagen", description = "Permite actualizar la imagen de un usuario ya creado")
     @ApiResponse(
             responseCode = "200",
@@ -411,6 +485,9 @@ public class UsuarioRestController {
         return result;
     }
 
+    @Autowired
+    private JwtService jwtService;
+
     @Operation(summary = "Actualizar usuario", description = "Permite actualizar la infromacion personal de un usuario ya creado")
     @ApiResponse(
             responseCode = "200",
@@ -421,15 +498,31 @@ public class UsuarioRestController {
             )
     )
     @PutMapping("Update")
-    public ResponseEntity Update(@RequestBody Usuario usuario) {
+    public ResponseEntity Update(@RequestBody Usuario usuario, HttpServletRequest request) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        String authHeader = request.getHeader("Authorization");
+        String token = authHeader.substring(7);
+
+        Integer idUsuarioToken = jwtService.extractIdUsuario(token);
+
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_Administrador"));
+
+        if (!esAdmin && !idUsuarioToken.equals(usuario.getIdUsuario())) {
+            Result result = new Result();
+            result.correct = false;
+            result.errorMessage = "No puedes editar otro usuario";
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(result);
+        }
 
         Result result = usuarioJPADAO.UpdateUser(usuario);
 
-        if (result.correct) {
-            return ResponseEntity.ok(result);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
-        }
+        return result.correct
+                ? ResponseEntity.ok(result)
+                : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
     }
 
     @Operation(summary = "Agregar nueva direccion", description = "Permite agregar una nueva direccion al usuario ya creada")
