@@ -249,6 +249,7 @@ public class UsuarioRestController {
     @DeleteMapping("Delete/{idUsuario}")
     @ResponseBody
     public ResponseEntity<Result> DeleteUsuario(@PathVariable int idUsuario) {
+               
         Result result = usuarioJPADAO.DeleteUser(idUsuario);
 
         if (result.correct) {
@@ -257,21 +258,7 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    @Autowired
-    private EntityManager entityManager;
 
-    @GetMapping("testDireccion/{id}")
-    public Object test(@PathVariable int id) {
-        return entityManager.createQuery(
-                "SELECT d FROM Direccion d WHERE d.idDireccion = :id"
-        ).setParameter("id", id)
-                .getResultList();
-    }
-
-    @GetMapping("testAllDirecciones")
-    public Object testAll() {
-        return entityManager.createQuery("SELECT d FROM Direccion d").getResultList();
-    }
 
     @Operation(summary = "Eliminar direccion", description = "Permite eliminar la direccion de un usuario ya creado")
     @ApiResponse(
@@ -288,7 +275,6 @@ public class UsuarioRestController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         
-        System.out.println("Usuario logueado: " + auth.getName());
         Result result = usuarioJPADAO.Delete(idDireccion, email);
 
         if (result.correct) {
@@ -370,6 +356,7 @@ public class UsuarioRestController {
                     examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
             )
     )
+    @PreAuthorize("hasRole('Administrador')")
     @PutMapping("Update/Estatus")
     public ResponseEntity<Result> Estatus(@RequestParam("idUsuario") int idUsuario, @RequestParam("estatus") int estatus) {
         Result result = usuarioJPADAO.Estatus(idUsuario, estatus);
@@ -390,6 +377,7 @@ public class UsuarioRestController {
                     examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
             )
     )
+    @PreAuthorize("hasRole('Administrador')")
     @PostMapping(value = "Add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Result<Usuario>> Add(@RequestPart("usuario") Usuario usuario, @RequestPart(name = "imagen", required = false) MultipartFile imagen) {
 

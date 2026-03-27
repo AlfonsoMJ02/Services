@@ -100,13 +100,11 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
                 return result;
             }
 
-// Obtener usuario logueado
             Usuario usuario = entityManager
                     .createQuery("FROM Usuario WHERE Email = :email", Usuario.class)
                     .setParameter("email", email)
                     .getSingleResult();
 
-// ADMIN
             if (usuario.getRol() != null
                     && usuario.getRol().getNombre().toUpperCase().contains("ADMIN")) {
 
@@ -116,7 +114,6 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
                 return result;
             }
 
-// PROPIETARIO
             if (direccion.getUsuario().getIdUsuario() == usuario.getIdUsuario()) {
 
                 entityManager.remove(direccion);
@@ -125,7 +122,6 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
                 return result;
             }
 
-// ❌ AQUÍ ES DONDE DEBE CAER
             result.correct = false;
             result.errorMessage = "No tienes permisos para eliminar esta direccion";
             return result;
