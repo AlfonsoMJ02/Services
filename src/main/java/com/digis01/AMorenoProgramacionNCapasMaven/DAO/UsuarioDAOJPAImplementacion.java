@@ -86,7 +86,7 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
     @Override
     @Transactional
-    public Result Delete(int idDireccion) {
+    public Result Delete(int idDireccion, String email) {
 
         Result result = new Result();
 
@@ -96,14 +96,39 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
             if (direccion == null) {
                 result.correct = false;
-                result.errorMessage = "La direccion con id " + idDireccion + " no existe o ya fue eliminada";
+                result.errorMessage = "La direccion no existe";
                 return result;
             }
 
-            entityManager.remove(direccion);
+// Obtener usuario logueado
+            Usuario usuario = entityManager
+                    .createQuery("FROM Usuario WHERE Email = :email", Usuario.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
 
-            result.correct = true;
-            result.object = "Direccion eliminada correctamente";
+// ADMIN
+            if (usuario.getRol() != null
+                    && usuario.getRol().getNombre().toUpperCase().contains("ADMIN")) {
+
+                entityManager.remove(direccion);
+                result.correct = true;
+                result.object = "Direccion eliminada correctamente (ADMIN)";
+                return result;
+            }
+
+// PROPIETARIO
+            if (direccion.getUsuario().getIdUsuario() == usuario.getIdUsuario()) {
+
+                entityManager.remove(direccion);
+                result.correct = true;
+                result.object = "Direccion eliminada correctamente (PROPIA)";
+                return result;
+            }
+
+// ❌ AQUÍ ES DONDE DEBE CAER
+            result.correct = false;
+            result.errorMessage = "No tienes permisos para eliminar esta direccion";
+            return result;
 
         } catch (Exception ex) {
 

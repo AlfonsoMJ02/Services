@@ -10,7 +10,7 @@ public interface IUsuarioJPA {
     Result GetAll();
     Result<Usuario> Add(Usuario usuario);
     Result GetById(int idUsuario);
-    Result Delete(int idDireccion);
+    Result Delete(int idDireccion, String email);
     Result DeleteUser(int idUsuario);
     Result AddDireccion(Direccion direccion);
     Result GetByIdDireccion(int idDireccion);

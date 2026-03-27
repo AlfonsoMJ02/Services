@@ -282,45 +282,20 @@ public class UsuarioRestController {
                     examples = @ExampleObject(value = SwaggerExamples.SUCCESS)
             )
     )
-    @DeleteMapping("Delete/Direccion/{idDireccion}")
-    public ResponseEntity<Result> DeleteDireccion(@PathVariable int idDireccion) {
-
+    @DeleteMapping("/Delete/Direccion/{idDireccion}")
+    public ResponseEntity<?> deleteDireccion(@PathVariable int idDireccion) {
+        
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
+        
+        System.out.println("Usuario logueado: " + auth.getName());
+        Result result = usuarioJPADAO.Delete(idDireccion, email);
 
-        Result resultUsuario = usuarioJPADAO.GetByEmail(email);
-
-        if (!resultUsuario.correct) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultUsuario);
+        if (result.correct) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(result);
         }
-
-        Usuario usuarioLogueado = (Usuario) resultUsuario.object;
-
-        boolean esAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_Administrador"));
-
-        Result resultDireccion = usuarioJPADAO.Delete(idDireccion);
-
-        if (!resultDireccion.correct) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultDireccion);
-        }
-
-        Direccion direccion = (Direccion) resultDireccion.object;
-
-        if (!esAdmin && direccion.getUsuario().getIdUsuario() != usuarioLogueado.getIdUsuario()) {
-
-            Result error = new Result();
-            error.correct = false;
-            error.errorMessage = "No puedes eliminar direcciones de otro usuario";
-
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-        }
-
-        Result result = usuarioJPADAO.Delete(idDireccion);
-
-        return result.correct
-                ? ResponseEntity.ok(result)
-                : ResponseEntity.badRequest().body(result);
     }
 
     @Operation(summary = "Mostrar solo un usuario", description = "Permite mostrar la informacion personal de un usuario ya creado")
