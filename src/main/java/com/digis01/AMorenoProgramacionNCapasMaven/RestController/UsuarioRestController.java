@@ -136,6 +136,18 @@ public class UsuarioRestController {
         }
     }
 
+    @GetMapping("GetByIdUser/{idUsuario}")
+    public ResponseEntity<Result> GetByIdFull(@PathVariable int idUsuario) {
+
+        Result result = usuarioJPADAO.GetByIdUser(idUsuario);
+
+        if (result.correct) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.badRequest().body(result);
+        }
+    }
+
     @Operation(summary = "Mostrar roles", description = "Permite mostrar todos los roles")
     @ApiResponse(
             responseCode = "200",
@@ -249,7 +261,7 @@ public class UsuarioRestController {
     @DeleteMapping("Delete/{idUsuario}")
     @ResponseBody
     public ResponseEntity<Result> DeleteUsuario(@PathVariable int idUsuario) {
-               
+
         Result result = usuarioJPADAO.DeleteUser(idUsuario);
 
         if (result.correct) {
@@ -258,7 +270,6 @@ public class UsuarioRestController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-
 
     @Operation(summary = "Eliminar direccion", description = "Permite eliminar la direccion de un usuario ya creado")
     @ApiResponse(
@@ -271,10 +282,10 @@ public class UsuarioRestController {
     )
     @DeleteMapping("/Delete/Direccion/{idDireccion}")
     public ResponseEntity<?> deleteDireccion(@PathVariable int idDireccion) {
-        
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
-        
+
         Result result = usuarioJPADAO.Delete(idDireccion, email);
 
         if (result.correct) {

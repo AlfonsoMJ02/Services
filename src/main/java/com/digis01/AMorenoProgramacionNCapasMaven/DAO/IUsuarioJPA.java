@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface IUsuarioJPA {
     Result GetAll();
+    Result GetByIdUser(int idUsuario);
     Result<Usuario> Add(Usuario usuario);
     Result GetById(int idUsuario);
     Result Delete(int idDireccion, String email);

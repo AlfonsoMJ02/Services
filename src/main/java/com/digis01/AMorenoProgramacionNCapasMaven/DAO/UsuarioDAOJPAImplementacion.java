@@ -47,6 +47,41 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
         return result;
     }
 
+    @Override
+    public Result GetByIdUser(int idUsuario) {
+
+        Result result = new Result();
+
+        try {
+
+            TypedQuery<Usuario> query = entityManager.createQuery(
+                    "SELECT u FROM Usuario u "
+                    + "LEFT JOIN FETCH u.Rol "
+                    + "LEFT JOIN FETCH u.Direcciones d "
+                    + "LEFT JOIN FETCH d.Colonia c "
+                    + "LEFT JOIN FETCH c.Municipio m "
+                    + "LEFT JOIN FETCH m.Estado e "
+                    + "LEFT JOIN FETCH e.Pais "
+                    + "WHERE u.IdUsuario = :idUsuario",
+                    Usuario.class
+            );
+
+            query.setParameter("idUsuario", idUsuario);
+
+            Usuario usuario = query.getSingleResult();
+
+            result.object = usuario;
+            result.correct = true;
+
+        } catch (Exception ex) {
+            result.correct = false;
+            result.errorMessage = ex.getMessage();
+            result.ex = ex;
+        }
+
+        return result;
+    }
+
     @Transactional
     @Override
     public Result<Usuario> Add(Usuario usuario) {
