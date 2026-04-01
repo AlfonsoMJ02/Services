@@ -11,6 +11,7 @@ import jakarta.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -173,24 +174,37 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
     @Override
     @Transactional
-    public Result DeleteUser(int idUsuario) {
+    public Result DeleteUser(int idUsuario, String email) {
 
         Result result = new Result();
 
         try {
 
-            Usuario usuario = entityManager.find(Usuario.class, idUsuario);
+            Usuario usuarioEliminar = entityManager.find(Usuario.class, idUsuario);
 
-            if (usuario != null) {
-
-                entityManager.remove(usuario);
-                result.correct = true;
-
-            } else {
-
+            if (usuarioEliminar == null) {
                 result.correct = false;
                 result.errorMessage = "Usuario no encontrado";
+                return result;
             }
+
+            Usuario usuarioLogueado = entityManager
+                    .createQuery("FROM Usuario WHERE Email = :email", Usuario.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
+
+            if (usuarioLogueado.getRol() != null
+                    && usuarioLogueado.getRol().getNombre().toUpperCase().contains("ADMIN")) {
+
+                entityManager.remove(usuarioEliminar);
+                result.correct = true;
+                result.object = "Usuario eliminado correctamente (ADMIN)";
+                return result;
+            }
+
+            result.correct = false;
+            result.errorMessage = "No tienes permisos para eliminar usuarios";
+            return result;
 
         } catch (Exception ex) {
 
@@ -204,31 +218,51 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
     @Override
     @Transactional
-    public Result AddDireccion(Direccion direccion) {
+    public Result AddDireccion(Direccion direccion, String email) {
 
         Result result = new Result();
 
         try {
 
-            direccion.setUsuario(
-                    entityManager.find(Usuario.class, direccion.getUsuario().getIdUsuario())
+            Usuario usuarioLogueado = entityManager
+                    .createQuery("FROM Usuario WHERE Email = :email", Usuario.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
+
+            Usuario usuarioDestino = entityManager.find(
+                    Usuario.class, direccion.getUsuario().getIdUsuario()
             );
 
-            direccion.setColonia(
-                    entityManager.find(Colonia.class, direccion.getColonia().getIdColonia())
+            Colonia colonia = entityManager.find(
+                    Colonia.class, direccion.getColonia().getIdColonia()
             );
 
-            if (direccion.getUsuario() != null && direccion.getColonia() != null) {
-
-                entityManager.persist(direccion);
-
-                result.correct = true;
-
-            } else {
-
+            if (usuarioDestino == null || colonia == null) {
                 result.correct = false;
                 result.errorMessage = "Usuario o colonia no encontrados";
+                return result;
             }
+
+            boolean esAdmin = usuarioLogueado.getRol() != null
+                    && usuarioLogueado.getRol().getNombre().toUpperCase().contains("ADMIN");
+
+            boolean esPropio = usuarioLogueado.getIdUsuario() == usuarioDestino.getIdUsuario();
+
+            if (!esAdmin && !esPropio) {
+                result.correct = false;
+                result.errorMessage = "No tienes permisos para agregar direccion a este usuario";
+                return result;
+            }
+
+            direccion.setUsuario(usuarioDestino);
+            direccion.setColonia(colonia);
+
+            entityManager.persist(direccion);
+
+            result.correct = true;
+            result.object = esAdmin
+                    ? "Direccion agregada (ADMIN)"
+                    : "Direccion agregada (PROPIA)";
 
         } catch (Exception ex) {
 
@@ -274,31 +308,48 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
     @Override
     @Transactional
-    public Result UpdateDireccion(Direccion direccion) {
+    public Result UpdateDireccion(Direccion direccion, String email) {
 
         Result result = new Result();
 
         try {
 
+            Usuario usuarioLogueado = entityManager
+                    .createQuery("FROM Usuario WHERE Email = :email", Usuario.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
+
             Direccion direccionJPA = entityManager.find(Direccion.class, direccion.getIdDireccion());
 
-            if (direccionJPA != null) {
-
-                direccionJPA.setCalle(direccion.getCalle());
-                direccionJPA.setNumeroInterior(direccion.getNumeroInterior());
-                direccionJPA.setNumeroExterior(direccion.getNumeroExterior());
-
-                direccionJPA.setColonia(
-                        entityManager.find(Colonia.class, direccion.getColonia().getIdColonia())
-                );
-
-                result.correct = true;
-
-            } else {
-
+            if (direccionJPA == null) {
                 result.correct = false;
                 result.errorMessage = "Direccion no encontrada";
+                return result;
             }
+
+            boolean esAdmin = usuarioLogueado.getRol() != null
+                    && usuarioLogueado.getRol().getNombre().toUpperCase().contains("ADMIN");
+
+            boolean esPropia = direccionJPA.getUsuario().getIdUsuario() == usuarioLogueado.getIdUsuario();
+
+            if (!esAdmin && !esPropia) {
+                result.correct = false;
+                result.errorMessage = "No tienes permisos para actualizar esta direccion";
+                return result;
+            }
+
+            direccionJPA.setCalle(direccion.getCalle());
+            direccionJPA.setNumeroInterior(direccion.getNumeroInterior());
+            direccionJPA.setNumeroExterior(direccion.getNumeroExterior());
+
+            direccionJPA.setColonia(
+                    entityManager.find(Colonia.class, direccion.getColonia().getIdColonia())
+            );
+
+            result.correct = true;
+            result.object = esAdmin
+                    ? "Direccion actualizada (ADMIN)"
+                    : "Direccion actualizada (PROPIA)";
 
         } catch (Exception ex) {
 
@@ -341,45 +392,64 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
     @Override
     @Transactional
-    public Result UpdateUser(Usuario usuario) {
+    public Result UpdateUser(Usuario usuario, String email) {
 
         Result result = new Result();
 
         try {
-            System.out.println("ID recibido JSON: " + usuario.getIdUsuario());
+
+            Usuario usuarioLogueado = entityManager
+                    .createQuery("FROM Usuario WHERE Email = :email", Usuario.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
+
             Usuario usuarioJPA = entityManager.find(Usuario.class, usuario.getIdUsuario());
 
-            if (usuarioJPA != null) {
-
-                usuarioJPA.setNombre(usuario.getNombre());
-                usuarioJPA.setApellidoPaterno(usuario.getApellidoPaterno());
-                usuarioJPA.setApellidoMaterno(usuario.getApellidoMaterno());
-                usuarioJPA.setEmail(usuario.getEmail());
-                usuarioJPA.setFechaNacimiento(usuario.getFechaNacimiento());
-                usuarioJPA.setSexo(usuario.getSexo());
-                if (usuario.getPassword() != null) {
-                    usuarioJPA.setPassword(usuario.getPassword());
-                }
-                usuarioJPA.setTelefono(usuario.getTelefono());
-                usuarioJPA.setCelular(usuario.getCelular());
-                usuarioJPA.setCurp(usuario.getCurp());
-                usuarioJPA.setUserName(usuario.getUserName());
-
-                if (usuario.getRol() != null) {
-                    usuarioJPA.setRol(
-                            entityManager.find(Rol.class, usuario.getRol().getIdRol())
-                    );
-                }
-
-                entityManager.merge(usuarioJPA);
-
-                result.correct = true;
-
-            } else {
-
+            if (usuarioJPA == null) {
                 result.correct = false;
                 result.errorMessage = "Usuario no encontrado";
+                return result;
             }
+
+            boolean esAdmin = usuarioLogueado.getRol() != null
+                    && usuarioLogueado.getRol().getNombre().toUpperCase().contains("ADMIN");
+
+            boolean esPropio = usuarioLogueado.getIdUsuario() == usuarioJPA.getIdUsuario();
+
+            if (!esAdmin && !esPropio) {
+                result.correct = false;
+                result.errorMessage = "No tienes permisos para actualizar este usuario";
+                return result;
+            }
+
+            usuarioJPA.setNombre(usuario.getNombre());
+            usuarioJPA.setApellidoPaterno(usuario.getApellidoPaterno());
+            usuarioJPA.setApellidoMaterno(usuario.getApellidoMaterno());
+            usuarioJPA.setEmail(usuario.getEmail());
+            usuarioJPA.setFechaNacimiento(usuario.getFechaNacimiento());
+            usuarioJPA.setSexo(usuario.getSexo());
+
+            if (usuario.getPassword() != null) {
+                usuarioJPA.setPassword(usuario.getPassword());
+            }
+
+            usuarioJPA.setTelefono(usuario.getTelefono());
+            usuarioJPA.setCelular(usuario.getCelular());
+            usuarioJPA.setCurp(usuario.getCurp());
+            usuarioJPA.setUserName(usuario.getUserName());
+
+            if (usuario.getRol() != null) {
+                usuarioJPA.setRol(
+                        entityManager.find(Rol.class, usuario.getRol().getIdRol())
+                );
+            }
+
+            entityManager.merge(usuarioJPA);
+
+            result.correct = true;
+            result.object = esAdmin
+                    ? "Usuario actualizado (ADMIN)"
+                    : "Usuario actualizado (PROPIO)";
 
         } catch (Exception ex) {
 
@@ -393,17 +463,37 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
 
     @Override
     @Transactional
-    public Result UpdateImagen(int idUsuario, String imagenBase64) {
+    public Result UpdateImagen(int idUsuario, String imagenBase64, Authentication auth) {
 
         Result result = new Result();
 
         try {
 
-            Query query = entityManager.createQuery("UPDATE Usuario SET  Imagen = :imagen WHERE IdUsuario = :idUsuario");
+            String username = auth.getName();
+
+            Usuario usuarioLogin = entityManager
+                    .createQuery("FROM Usuario WHERE Email = :email", Usuario.class)
+                    .setParameter("email", username)
+                    .getSingleResult();
+
+            boolean esAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_Administrador"));
+
+            if (!esAdmin && usuarioLogin.getIdUsuario() != idUsuario) {
+                result.correct = false;
+                result.errorMessage = "No tienes permisos para modificar esta imagen";
+                return result;
+            }
+
+            Query query = entityManager.createQuery(
+                    "UPDATE Usuario SET Imagen = :imagen WHERE IdUsuario = :idUsuario"
+            );
 
             query.setParameter("imagen", imagenBase64);
             query.setParameter("idUsuario", idUsuario);
+
             int filas = query.executeUpdate();
+
             result.correct = filas > 0;
 
         } catch (Exception ex) {
@@ -416,13 +506,27 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
         return result;
     }
 
-    @Transactional
     @Override
-    public Result Estatus(int idUsuario, int estatus) {
+    @Transactional
+    public Result Estatus(int idUsuario, int estatus, String email) {
 
         Result result = new Result();
 
         try {
+
+            Usuario usuarioLogueado = entityManager
+                    .createQuery("FROM Usuario WHERE Email = :email", Usuario.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
+
+            boolean esAdmin = usuarioLogueado.getRol() != null
+                    && usuarioLogueado.getRol().getNombre().toUpperCase().contains("ADMIN");
+
+            if (!esAdmin) {
+                result.correct = false;
+                result.errorMessage = "No tienes permisos para cambiar el estatus";
+                return result;
+            }
 
             Query query = entityManager.createQuery(
                     "UPDATE Usuario SET Estatus = :estatus WHERE IdUsuario = :idUsuario"
@@ -434,6 +538,12 @@ public class UsuarioDAOJPAImplementacion implements IUsuarioJPA {
             int filas = query.executeUpdate();
 
             result.correct = filas > 0;
+
+            if (filas > 0) {
+                result.object = "Estatus actualizado correctamente";
+            } else {
+                result.errorMessage = "Usuario no encontrado";
+            }
 
         } catch (Exception ex) {
 
